@@ -1,0 +1,27 @@
+---
+name: TG 通知
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: '要发送的通知内容'
+        required: true
+        type: string
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 发送 TG 消息
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          MSG: ${{ inputs.message }}
+        run: |
+          RESP=$(curl -s --max-time 30 -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT_ID}" \
+            --data-urlencode "text=${MSG}")
+          echo "${RESP}" | head -c 300
+          echo "${RESP}" | grep -q '"ok":true' || { echo "TG 发送失败"; exit 1; }
+---
